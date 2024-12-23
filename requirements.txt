@@ -1,1 +1,4 @@
 Flask
+wtforms
+Flask-WTF 
+markdown

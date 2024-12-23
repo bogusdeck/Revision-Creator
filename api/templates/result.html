@@ -1,13 +1,98 @@
-<!doctype html>
-<html>
-   <body>
-      <table border = 1>
-         {% for key, value in result.items() %}
-            <tr>
-               <th> {{ key }} </th>
-               <td> {{ value }} </td>
-            </tr>
-         {% endfor %}
-      </table>
-   </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Summary Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .markdown-preview {
+            white-space: pre-wrap;
+            background-color: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-family: monospace;
+        }
+        .copy-btn {
+            background-color: #3182ce;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            background-color: #2b6cb0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto mt-8 px-4">
+        <h1 class="text-3xl font-bold text-center mb-6">Task Summary Generator</h1>
+
+        <form method="POST" class="space-y-4">
+            <div>
+                <label for="task_id" class="block text-lg">Task ID (Optional):</label>
+                <input type="text" id="task_id" name="task_id" value="{{ task_id }}" class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="bug_title" class="block text-lg">Bug Title (Required):</label>
+                <input type="text" id="bug_title" name="bug_title" value="{{ bug_title }}" class="w-full p-2 border rounded-md" required>
+            </div>
+            <div>
+                <label for="error_message" class="block text-lg">Error Message (Optional):</label>
+                <textarea id="error_message" name="error_message" class="w-full p-2 border rounded-md">{{ error_message }}</textarea>
+            </div>
+            <div>
+                <label for="sentry_link" class="block text-lg">Sentry Link (Optional):</label>
+                <input type="text" id="sentry_link" name="sentry_link" value="{{ sentry_link }}" class="w-full p-2 border rounded-md">
+            </div>
+            <div>
+                <label for="issue_description" class="block text-lg">Issue Description (Required):</label>
+                <textarea id="issue_description" name="issue_description" class="w-full p-2 border rounded-md" required>{{ issue_description }}</textarea>
+            </div>
+            <div>
+                <label for="fix_description" class="block text-lg">Fix Description (Required):</label>
+                <textarea id="fix_description" name="fix_description" class="w-full p-2 border rounded-md" required>{{ fix_description }}</textarea>
+            </div>
+            <div>
+                <label for="before_after_table_needed" class="block text-lg">Before/After Table (Optional):</label>
+                <input type="checkbox" id="before_after_table_needed" name="before_after_table_needed" {% if before_after_table_needed %}checked{% endif %}>
+            </div>
+            <div>
+                <label for="preview_table_needed" class="block text-lg">Preview Table (Optional):</label>
+                <input type="checkbox" id="preview_table_needed" name="preview_table_needed" {% if preview_table_needed %}checked{% endif %}>
+            </div>
+
+            <button type="submit" class="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Generate Summary</button>
+        </form>
+        
+            <div class="mt-8">
+                <h2 class="text-2xl font-semibold mb-4">Markdown Output</h2>
+                <button class="copy-btn mb-4" onclick="copyMarkdown()">Copy to Clipboard</button>
+                <textarea id="markdown_content" class="w-full p-4 border rounded-md" rows="30" readonly>{{ markdown_content }}</textarea>
+            </div>
+
+        <div class="mt-8">
+            <h2 class="text-2xl font-semibold mb-4">Markdown Preview</h2>
+            <div id="markdown_preview" class="markdown-preview">
+                {{ html_content|safe }}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyMarkdown() {
+            const markdownContent = document.getElementById("markdown_content").value;
+            
+            navigator.clipboard.writeText(markdownContent).then(function() {
+                alert("Markdown copied to clipboard!");
+            }).catch(function(error) {
+                alert("Failed to copy text: " + error);
+            });
+        }
+    </script>
+</body>
 </html>
