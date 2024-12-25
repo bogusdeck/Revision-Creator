@@ -7,19 +7,38 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        .markdown-preview {
-            white-space: pre-wrap;
-            background-color: #f7fafc;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            font-family: monospace;
+        body.dark-mode {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        body.dark-mode .markdown-preview {
+            background-color: #2d3748;
+            color: #e2e8f0;
+        }
+        body.dark-mode input,
+        body.dark-mode textarea,
+        body.dark-mode select {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+        body.dark-mode button {
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+        body.dark-mode button:hover {
+            background-color: #718096;
         }
     </style>
 </head>
 <body>
     <div class="container mx-auto mt-8 px-4">
-        <h1 class="text-3xl font-bold text-center mb-6">Task Summary Generator</h1>
+        <h1 class="text-2xl font-bold text-center mb-4">Task Summary Generator</h1>
+        <div class="flex justify-end mt-4">
+            <button id="toggle_dark_mode" class="bg-gray-700 text-white py-1 px-3 rounded-md hover:bg-gray-800">
+                Toggle Dark Mode
+            </button>
+        </div>
 
         <form method="POST">
             <div>
@@ -32,7 +51,7 @@
             </div>
             <div>
                 <label for="error_message" class="block text-lg">Error Message (Optional):</label>
-                <textarea id="error_message" name="error_message" class="w-full p-2 border rounded-md">{{ error_message }}</textarea>
+                <textarea id="error_message" name="error_message" class="w-full p-2 border rounded-md" rows="6">{{ error_message }}</textarea>
             </div>
             <div>
                 <label for="sentry_link" class="block text-lg">Sentry Link (Optional):</label>
@@ -40,11 +59,11 @@
             </div>
             <div>
                 <label for="issue_description" class="block text-lg">Issue Description (Required):</label>
-                <textarea id="issue_description" name="issue_description" class="w-full p-2 border rounded-md" rows="10" required>{{ issue_description }}</textarea>
+                <textarea id="issue_description" name="issue_description" class="w-full p-2 border rounded-md" rows="6" required>{{ issue_description }}</textarea>
             </div>
             <div>
                 <label for="fix_description" class="block text-lg">Fix Description (Required):</label>
-                <textarea id="fix_description" name="fix_description" class="w-full p-2 border rounded-md" rows="10" required>{{ fix_description }}</textarea>
+                <textarea id="fix_description" name="fix_description" class="w-full p-2 border rounded-md" rows="6" required>{{ fix_description }}</textarea>
             </div>
             <div>
                 <label for="before_after_table_needed" class="block text-lg">Before/After Table (Optional):</label>
@@ -57,12 +76,11 @@
 
             <button type="submit" class="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Generate Summary</button>
             <button type="button" id="check_rephrase" class="mt-4 bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600">Check and Rephrase</button>
-        </form>
+        </form>        
 
-        <!-- Markdown Content Preview -->
         <div class="mt-8">
             <h2 class="text-2xl font-semibold mb-4">Markdown Preview</h2>
-            <div id="markdown_preview" class="markdown-preview">
+            <div id="markdown_preview" class="markdown-preview p-5">
                 {{ html_content|safe }}
             </div>
         </div>
@@ -74,10 +92,15 @@
     </div>
 
     <script>
+        const toggleButton = document.getElementById('toggle_dark_mode');
+        toggleButton.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+
         document.getElementById('check_rephrase').addEventListener('click', async function() {
             const issueText = document.getElementById('issue_description').value;
             const fixText = document.getElementById('fix_description').value;
-
+            
             const response = await fetch('/rephrase', {
                 method: 'POST',
                 headers: {
@@ -88,7 +111,6 @@
 
             const result = await response.json();
 
-            // Update the form with rephrased text
             document.getElementById('issue_description').value = result.rephrased_issue;
             document.getElementById('fix_description').value = result.rephrased_fix;
         });
