@@ -1,10 +1,16 @@
 from flask import Flask, render_template, request, jsonify
+from dotenv import load_dotenv
+import os
 import markdown
 import cohere  
 
+load_dotenv()
+
 app = Flask(__name__)
 
-cohere_client = cohere.Client('U0YFpDWyog05QGJHypVX03VRSuYNyw4PtNwGeJA5')
+api_key = os.getenv('COHERE_API_KEY')
+
+cohere_client = cohere.Client(api_key)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
