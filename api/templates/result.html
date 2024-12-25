@@ -15,24 +15,13 @@
             border: 1px solid #e2e8f0;
             font-family: monospace;
         }
-        .copy-btn {
-            background-color: #3182ce;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .copy-btn:hover {
-            background-color: #2b6cb0;
-        }
     </style>
 </head>
 <body>
     <div class="container mx-auto mt-8 px-4">
         <h1 class="text-3xl font-bold text-center mb-6">Task Summary Generator</h1>
 
-        <form method="POST" class="space-y-4">
+        <form method="POST">
             <div>
                 <label for="task_id" class="block text-lg">Task ID (Optional):</label>
                 <input type="text" id="task_id" name="task_id" value="{{ task_id }}" class="w-full p-2 border rounded-md">
@@ -51,11 +40,11 @@
             </div>
             <div>
                 <label for="issue_description" class="block text-lg">Issue Description (Required):</label>
-                <textarea id="issue_description" name="issue_description" class="w-full p-2 border rounded-md" required>{{ issue_description }}</textarea>
+                <textarea id="issue_description" name="issue_description" class="w-full p-2 border rounded-md" rows="10" required>{{ issue_description }}</textarea>
             </div>
             <div>
                 <label for="fix_description" class="block text-lg">Fix Description (Required):</label>
-                <textarea id="fix_description" name="fix_description" class="w-full p-2 border rounded-md" required>{{ fix_description }}</textarea>
+                <textarea id="fix_description" name="fix_description" class="w-full p-2 border rounded-md" rows="10" required>{{ fix_description }}</textarea>
             </div>
             <div>
                 <label for="before_after_table_needed" class="block text-lg">Before/After Table (Optional):</label>
@@ -67,32 +56,42 @@
             </div>
 
             <button type="submit" class="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Generate Summary</button>
+            <button type="button" id="check_rephrase" class="mt-4 bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600">Check and Rephrase</button>
         </form>
-        
-            <div class="mt-8">
-                <h2 class="text-2xl font-semibold mb-4">Markdown Output</h2>
-                <button class="copy-btn mb-4" onclick="copyMarkdown()">Copy to Clipboard</button>
-                <textarea id="markdown_content" class="w-full p-4 border rounded-md" rows="30" readonly>{{ markdown_content }}</textarea>
-            </div>
 
+        <!-- Markdown Content Preview -->
         <div class="mt-8">
             <h2 class="text-2xl font-semibold mb-4">Markdown Preview</h2>
             <div id="markdown_preview" class="markdown-preview">
                 {{ html_content|safe }}
             </div>
         </div>
+
+        <div class="mt-8">
+            <h2 class="text-2xl font-semibold mb-4">Markdown Output</h2>
+            <textarea class="w-full p-4 border rounded-md" rows="10" readonly>{{ markdown_content }}</textarea>
+        </div>
     </div>
 
     <script>
-        function copyMarkdown() {
-            const markdownContent = document.getElementById("markdown_content").value;
-            
-            navigator.clipboard.writeText(markdownContent).then(function() {
-                alert("Markdown copied to clipboard!");
-            }).catch(function(error) {
-                alert("Failed to copy text: " + error);
+        document.getElementById('check_rephrase').addEventListener('click', async function() {
+            const issueText = document.getElementById('issue_description').value;
+            const fixText = document.getElementById('fix_description').value;
+
+            const response = await fetch('/rephrase', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ issue_text: issueText, fix_text: fixText })
             });
-        }
+
+            const result = await response.json();
+
+            // Update the form with rephrased text
+            document.getElementById('issue_description').value = result.rephrased_issue;
+            document.getElementById('fix_description').value = result.rephrased_fix;
+        });
     </script>
 </body>
 </html>

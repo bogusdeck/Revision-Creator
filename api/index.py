@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import markdown
+import cohere  
 
 app = Flask(__name__)
+
+cohere_client = cohere.Client('U0YFpDWyog05QGJHypVX03VRSuYNyw4PtNwGeJA5')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -14,6 +17,7 @@ def index():
         fix_description = request.form['fix_description']
         before_after_table_needed = 'before_after_table_needed' in request.form
         preview_table_needed = 'preview_table_needed' in request.form
+
         markdown_content = generate_markdown(
             task_id,
             bug_title,
@@ -37,6 +41,33 @@ def index():
                            task_id='', bug_title='', error_message='', sentry_link='',
                            issue_description='', fix_description='', before_after_table_needed=False,
                            preview_table_needed=False)
+
+@app.route('/rephrase', methods=['POST'])
+def rephrase():
+    data = request.get_json()
+
+    issue_text = data.get('issue_text')
+    fix_text = data.get('fix_text')
+
+    try:
+        rephrased_issue = cohere_client.generate(
+            model='command-r-08-2024',
+            prompt=f"Check the grammar and correctness of the following text and provide only the corrected version as output. Do not include any explanations or additional words:\n\n{issue_text}",
+            max_tokens=200,
+            temperature=0.7
+        ).generations[0].text.strip()
+
+        rephrased_fix = cohere_client.generate(
+            model='command-r-08-2024',
+            prompt=f"Check the grammar and correctness of the following text and provide only the corrected version as output. Do not include any explanations or additional words:\n\n{fix_text}",
+            max_tokens=200,
+            temperature=0.7
+        ).generations[0].text.strip()
+
+        return jsonify({'rephrased_issue': rephrased_issue, 'rephrased_fix': rephrased_fix})
+
+    except Exception as e:
+        return jsonify({'error': f"An error occurred during rephrasing: {str(e)}"}), 500
 
 def generate_markdown(task_id, bug_title, error_message, sentry_link, issue_description, fix_description, before_after_table_needed, preview_table_needed):
     markdown_content = ""
@@ -66,3 +97,5 @@ def generate_markdown(task_id, bug_title, error_message, sentry_link, issue_desc
 
     return markdown_content
 
+if __name__ == '__main__':
+    app.run(debug=True)

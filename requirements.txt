@@ -2,3 +2,4 @@ Flask
 wtforms
 Flask-WTF 
 markdown
+cohere
